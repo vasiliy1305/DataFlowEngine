@@ -1,0 +1,35 @@
+@startuml
+title Ingestion Service Component Diagram
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(ingestion, "Ingestion Service", "Go") {
+  Component(http_handler, "HTTP Handler", "REST API endpoint")
+  Component(validator, "Validator", "Data validation")
+  Component(transformer, "Transformer", "Unit conversion")
+  Component(clickhouse_writer, "ClickHouse Writer", "Batch inserts")
+  Component(redis_updater, "Redis Updater", "Cache latest values")
+}
+
+Container(clickhouse, "Time-Series DB", "ClickHouse")
+Container(redis, "Cache", "Redis")
+Container(api_gw, "API Gateway", "Go")
+
+' Взаимодействия
+Rel(api_gw, http_handler, "POST /ingest", "HTTP")
+Rel(http_handler, validator, "Validates", "Go calls")
+Rel(validator, transformer, "Converts units", "Go calls")
+Rel(transformer, clickhouse_writer, "Writes", "Batch queue")
+Rel(transformer, redis_updater, "Updates", "Go calls")
+Rel(clickhouse_writer, clickhouse, "INSERT", "Native TCP")
+Rel(redis_updater, redis, "SET", "Redis protocol")
+
+note right of validator
+  **Проверяет**:
+  - Формат данных
+  - Диапазоны значений
+  - Обязательные поля
+end note
+@enduml
