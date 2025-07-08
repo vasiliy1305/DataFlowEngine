@@ -1,0 +1,10 @@
+<yandex>
+    <listen_host>0.0.0.0</listen_host>
+    
+    <!-- Разрешаем запросы без аутентификации -->
+    <profiles>
+        <default>
+            <access_management>1</access_management>
+        </default>
+    </profiles>
+</yandex>

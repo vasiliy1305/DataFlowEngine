@@ -76,7 +76,7 @@ REST
 
 [Swagger/OpenAPI](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/openapi.yaml)
 
-# Задание 5. Работа с docker и docker-compose
+# MVP
 
 Перейдите в apps.
 
