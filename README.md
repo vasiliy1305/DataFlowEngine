@@ -62,7 +62,7 @@ ClickHouse + Go (микросервисы) + Grafana + Redis
 
 **Диаграмма кода (Code)**
 
-# Задание 3. Разработка ER-диаграммы
+# Разработка ER-диаграммы
 
 [ER-диаграмма](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/ER.puml)
 
@@ -70,11 +70,11 @@ ClickHouse + Go (микросервисы) + Grafana + Redis
 
 ### 1. Тип API
 
-Укажите, какой тип API вы будете использовать для взаимодействия микросервисов. Объясните своё решение.
+REST
 
 ### 2. Документация API
 
-Здесь приложите ссылки на документацию API для микросервисов, которые вы спроектировали в первой части проектной работы. Для документирования используйте Swagger/OpenAPI или AsyncAPI.
+[Swagger/OpenAPI](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/openapi.yaml)
 
 # Задание 5. Работа с docker и docker-compose
 

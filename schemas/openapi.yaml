@@ -1,291 +1,243 @@
 openapi: 3.0.3
 info:
-  title: Smart Home Microservices API
+  title: Sensor Data Collection API
   version: 1.0.0
   description: |
-    Документация API для умного дома:
-    - Управление устройствами
-    - Аутентификация пользователей
-    - Сбор телеметрии
+    API для системы сбора и анализа данных с аналоговых датчиков:
+    - Прием данных от датчиков
+    - Управление метаданными
+    - Анализ временных рядов
   contact:
-    email: api@smarthome.example.com
+    email: api@sensorhub.example.com
 
 servers:
-  - url: https://api.smarthome.example.com
+  - url: https://api.sensorhub.example.com/v1
     description: Production server
-  - url: https://dev-api.smarthome.example.com
+  - url: https://dev-api.sensorhub.example.com/v1
     description: Development server
 
 tags:
-  - name: Authentication
-    description: Регистрация и управление доступом
-  - name: Devices
-    description: Управление IoT устройствами
-  - name: Telemetry
-    description: Данные с датчиков
+  - name: Sensors
+    description: Управление метаданными датчиков
+  - name: Ingestion
+    description: Прием данных измерений
+  - name: Query
+    description: Запрос данных и аналитика
 
 paths:
-  # ================== Auth Service ==================
-  /auth/register:
+  /sensors:
     post:
-      tags: [Authentication]
-      summary: Регистрация пользователя
+      tags: [Sensors]
+      summary: Зарегистрировать новый датчик
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserRegister'
+              $ref: '#/components/schemas/SensorCreate'
       responses:
         '201':
-          description: Пользователь создан
+          description: Датчик зарегистрирован
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '409':
-          description: Пользователь уже существует
-
-  /auth/login:
-    post:
-      tags: [Authentication]
-      summary: Аутентификация
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserLogin'
-      responses:
-        '200':
-          description: Успешный вход
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
-          description: Неверные учетные данные
-
-  # ================== Device Service ==================
-  /devices:
+                $ref: '#/components/schemas/Sensor'
+        '400':
+          description: Неверные параметры датчика
     get:
-      tags: [Devices]
-      summary: Получить список устройств
-      security:
-        - BearerAuth: []
+      tags: [Sensors]
+      summary: Получить список датчиков
       parameters:
-        - $ref: '#/components/parameters/houseId'
+        - $ref: '#/components/parameters/groupFilter'
       responses:
         '200':
-          description: Список устройств
+          description: Список датчиков
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Device'
+                  $ref: '#/components/schemas/Sensor'
 
-    post:
-      tags: [Devices]
-      summary: Добавить устройство
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeviceCreate'
+  /sensors/{sensor_id}:
+    get:
+      tags: [Sensors]
+      summary: Получить информацию о датчике
+      parameters:
+        - $ref: '#/components/parameters/sensorId'
       responses:
-        '201':
-          description: Устройство создано
+        '200':
+          description: Метаданные датчика
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Device'
+                $ref: '#/components/schemas/Sensor'
+        '404':
+          description: Датчик не найден
 
-  /devices/{deviceId}/command:
+  /ingest:
     post:
-      tags: [Devices]
-      summary: Отправить команду устройству
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/deviceId'
+      tags: [Ingestion]
+      summary: Отправить данные датчика
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeviceCommand'
+              oneOf:
+                - $ref: '#/components/schemas/SingleDataPoint'
+                - $ref: '#/components/schemas/BatchDataPoints'
       responses:
         '202':
-          description: Команда принята
-        '404':
-          description: Устройство не найдено
+          description: Данные приняты в обработку
+        '400':
+          description: Ошибка валидации данных
 
-  # ================== Telemetry Service ==================
-  /telemetry:
+  /data/current/{sensor_id}:
     get:
-      tags: [Telemetry]
-      summary: Получить телеметрию
-      security:
-        - BearerAuth: []
+      tags: [Query]
+      summary: Текущее значение датчика
       parameters:
-        - $ref: '#/components/parameters/deviceId'
-        - $ref: '#/components/parameters/timeRange'
+        - $ref: '#/components/parameters/sensorId'
       responses:
         '200':
-          description: Данные телеметрии
+          description: Последнее зарегистрированное значение
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TelemetryData'
+                $ref: '#/components/schemas/DataPoint'
+        '404':
+          description: Нет данных для датчика
 
-  /telemetry/alerts:
+  /data/history/{sensor_id}:
     get:
-      tags: [Telemetry]
-      summary: Получить активные алерты
-      security:
-        - BearerAuth: []
+      tags: [Query]
+      summary: Исторические данные
+      parameters:
+        - $ref: '#/components/parameters/sensorId'
+        - $ref: '#/components/parameters/timeFrom'
+        - $ref: '#/components/parameters/timeTo'
+        - $ref: '#/components/parameters/aggregation'
       responses:
         '200':
-          description: Список алертов
+          description: Массив точек данных
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Alert'
+                  $ref: '#/components/schemas/DataPoint'
 
 components:
   securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
 
   parameters:
-    deviceId:
-      name: deviceId
+    sensorId:
+      name: sensor_id
       in: path
       required: true
       schema:
         type: string
-      example: "thermostat-living-room-1"
-    houseId:
-      name: houseId
+      example: "temp_boiler_01"
+    groupFilter:
+      name: group
       in: query
       schema:
         type: string
-      example: "house-123"
-    timeRange:
-      name: timeRange
+      example: "boiler_room"
+    timeFrom:
+      name: from
       in: query
       schema:
         type: string
-        enum: [1h, 24h, 7d, 30d]
-      description: Период выборки данных
+        format: date-time
+      example: "2024-01-01T00:00:00Z"
+    timeTo:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date-time
+      example: "2024-01-02T00:00:00Z"
+    aggregation:
+      name: agg
+      in: query
+      schema:
+        type: string
+        enum: [raw, 1m, 5m, 1h, 1d]
+      description: Уровень агрегации данных
 
   schemas:
-    # Auth Schemas
-    UserRegister:
+    SensorCreate:
       type: object
-      required: [email, password]
+      required: [sensor_id, physical_quantity, unit]
       properties:
-        email:
+        sensor_id:
           type: string
-          format: email
-        password:
-          type: string
-          minLength: 8
+          pattern: '^[a-z0-9_]+$'
         name:
           type: string
+        physical_quantity:
+          type: string
+          enum: [temperature, pressure, humidity, current, voltage]
+        unit:
+          type: string
+          enum: ["°C", "kPa", "%", "mA", "V"]
+        min_value:
+          type: number
+        max_value:
+          type: number
+        group_id:
+          type: string
       example:
-        email: "user@example.com"
-        password: "securePass123"
-        name: "Иван Иванов"
+        sensor_id: "temp_boiler_01"
+        name: "Температура в котле"
+        physical_quantity: "temperature"
+        unit: "°C"
+        min_value: -20
+        max_value: 120
+        group_id: "boiler_room"
 
-    UserLogin:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-      example:
-        email: "user@example.com"
-        password: "securePass123"
+    Sensor:
+      allOf:
+        - $ref: '#/components/schemas/SensorCreate'
+        - type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum: [active, inactive, maintenance]
 
-    AuthResponse:
+    SingleDataPoint:
       type: object
+      required: [sensor_id, value]
       properties:
-        token:
+        sensor_id:
           type: string
-        expiresIn:
-          type: integer
-      example:
-        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        expiresIn: 3600
-
-    # Device Schemas
-    Device:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-          enum: [thermostat, light, camera, lock]
-        name:
-          type: string
-        status:
-          type: string
-          enum: [online, offline, error]
-        lastSeen:
+        value:
+          type: number
+        timestamp:
           type: string
           format: date-time
       example:
-        id: "thermostat-living-room-1"
-        type: "thermostat"
-        name: "Living Room Thermostat"
-        status: "online"
-        lastSeen: "2023-05-20T12:34:56Z"
+        sensor_id: "temp_boiler_01"
+        value: 75.3
+        timestamp: "2024-01-01T12:00:00Z"
 
-    DeviceCreate:
-      type: object
-      required: [type, name]
-      properties:
-        type:
-          type: string
-        name:
-          type: string
-        location:
-          type: string
-      example:
-        type: "light"
-        name: "Kitchen Light"
-        location: "kitchen"
+    BatchDataPoints:
+      type: array
+      items:
+        $ref: '#/components/schemas/SingleDataPoint'
+      minItems: 1
+      maxItems: 1000
 
-    DeviceCommand:
-      type: object
-      required: [command]
-      properties:
-        command:
-          type: string
-          enum: [ON, OFF, LOCK, UNLOCK, SET_TEMP]
-        value:
-          type: number
-          description: Для команд типа SET_TEMP
-      example:
-        command: "SET_TEMP"
-        value: 22.5
-
-    # Telemetry Schemas
-    TelemetryData:
+    DataPoint:
       type: object
       properties:
         timestamp:
@@ -296,28 +248,6 @@ components:
         unit:
           type: string
       example:
-        timestamp: "2023-05-20T12:34:56Z"
-        value: 22.5
+        timestamp: "2024-01-01T12:00:00Z"
+        value: 75.3
         unit: "°C"
-
-    Alert:
-      type: object
-      properties:
-        id:
-          type: string
-        deviceId:
-          type: string
-        message:
-          type: string
-        severity:
-          type: string
-          enum: [low, medium, high, critical]
-        timestamp:
-          type: string
-          format: date-time
-      example:
-        id: "alert-123"
-        deviceId: "thermostat-living-room-1"
-        message: "High temperature detected"
-        severity: "high"
-        timestamp: "2023-05-20T12:34:56Z"
