@@ -1,15 +1,17 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-Person(user, "User", "Controls heating and monitors temperature")
-Person(admin, "Administrator", "Manages system configuration and users")
-System_Boundary(system, "'WarmHouse' System") {
-    System(monolith, "Monolithic Application", "Go + PostgreSQL")
+Person(operator, "Operator", "Views sensor data and dashboards")
+Person(admin, "Administrator", "Manages devices and access")
+
+System_Boundary(system, "'SensorLog' System") {
+    System(logging, "Data Collection & Logging System", "Receives, stores and processes sensor data")
 }
-System(sensor, "Sensors and Relays", "Physical devices in homes")
 
-Rel(user, monolith, "Control via web interface", "HTTP")
-Rel(admin, monolith, "Manage system configuration", "HTTP")
-Rel(monolith, sensor, "Read data/send commands", "HTTP")
+System(controller, "Sensor Controller", "External hardware: measures and transmits data")
 
+' Connections
+Rel(operator, logging, "View data", "HTTPS")
+Rel(admin, logging, "Configure system", "HTTPS")
+Rel(controller, logging, "Submit readings", "HTTP")
 @enduml
