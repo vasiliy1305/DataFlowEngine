@@ -1,48 +1,59 @@
 @startuml
-entity "User" {
-  *id: integer <<generated>>
-  --
-  *name: varchar
-  *email: varchar
-  *password_hash: varchar
-  created_at: timestamp
-}
-
-entity "House" {
-  *id: integer <<generated>>
-  --
-  *user_id: integer <<FK>>
-  *address: varchar
-  created_at: timestamp
-}
-
-entity "DeviceType" {
-  *id: integer <<generated>>
+entity "Sensor" {
+  *sensor_id: string <<PK>>
   --
   *name: varchar
   description: text
-}
-
-entity "Device" {
-  *id: integer <<generated>>
-  --
-  *house_id: integer <<FK>>
-  *type_id: integer <<FK>>
-  *serial_number: varchar
-  status: varchar
+  *physical_quantity: varchar <<"temperature|pressure|humidity">>
+  *unit: varchar <<"°C|kPa|%">>
+  min_value: float
+  max_value: float
   created_at: timestamp
+  calibration_date: timestamp
+  status: varchar <<"active|inactive|maintenance">>
 }
 
-entity "TelemetryData" {
-  *id: integer <<generated>>
+entity "SensorGroup" {
+  *group_id: string <<PK>>
   --
-  *device_id: integer <<FK>>
+  *name: varchar
+  location: varchar
+  owner: varchar
+}
+
+entity "SensorData" {
+  *id: uuid <<PK>>
+  --
+  *sensor_id: string <<FK>>
   *value: float
   *timestamp: timestamp
+  quality: integer <<0-100>>
+  metadata: json <<"raw ADC values, flags">>
 }
 
-User ||--o{ House : "owns"
-House ||--o{ Device : "contains"
-Device }o--|| DeviceType : "has_type"
-Device ||--o{ TelemetryData : "produces"
+entity "User" {
+  *user_id: string <<PK>>
+  --
+  *login: varchar
+  *password_hash: varchar
+  role: varchar <<"admin|operator">>
+  last_login: timestamp
+}
+
+Sensor }o--|| SensorGroup : "belongs_to"
+Sensor ||--o{ SensorData : "produces"
+User ||--o{ SensorGroup : "manages"
+
+note top of Sensor
+  **Пример тега**: 
+  boiler_room_temp_01
+  (котельная_тип_номер)
+end note
+
+note right of SensorData
+  **Оптимизация для ClickHouse**:
+  - Сортировка по (sensor_id, timestamp)
+  - TTL 1 год
+  - Сжатие ZSTD
+end note
 @enduml

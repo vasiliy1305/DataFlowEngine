@@ -62,7 +62,7 @@ ClickHouse + Go (микросервисы) + Grafana + Redis
 **Диаграмма компонентов (Components)**
 
 ```markdown
-[Диаграмма контейнеров](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/component/Ingestion%20Service%20Component.puml)
+[Ingestion Service Component](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/component/Ingestion%20Service%20Component.puml)
 ```
 
 **Диаграмма кода (Code)**
