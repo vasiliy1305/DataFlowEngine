@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:23.8
@@ -9,10 +7,29 @@ services:
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./clickhouse/config.d:/etc/clickhouse-server/config.d
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass redispass
     environment:
-      CLICKHOUSE_DB: sensorhub
-      CLICKHOUSE_USER: default  # Используем встроенного пользователя
-      CLICKHOUSE_PASSWORD: ""   # Пустой пароль для теста
+      REDIS_PASSWORD: redispass
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispass", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   clickhouse_data:
+  redis_data:
