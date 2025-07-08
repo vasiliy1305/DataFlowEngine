@@ -50,20 +50,15 @@ ClickHouse + Go (микросервисы) + Grafana + Redis
 
 ### 3. Диаграммы С4
 
-```markdown
 [контекст](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/context/Context.puml)
-```
 
-```markdown
 [Диаграмма контейнеров](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/container/Container.puml)
-```
 
 
 **Диаграмма компонентов (Components)**
 
-```markdown
 [Ingestion Service Component](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/component/Ingestion%20Service%20Component.puml)
-```
+
 
 **Диаграмма кода (Code)**
 
