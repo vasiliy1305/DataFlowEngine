@@ -55,12 +55,9 @@ ClickHouse + Go (микросервисы) + Grafana + Redis
 ```
 
 ```markdown
-[Диаграмма контейнеров](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/context/Context.puml)
+[Диаграмма контейнеров](https://github.com/vasiliy1305/DataFlowEngine/blob/main/schemas/diagrams/container/Container.puml)
 ```
 
-**Диаграмма контейнеров (Containers)**
-
-Добавьте диаграмму.
 
 **Диаграмма компонентов (Components)**
 
